@@ -34,7 +34,7 @@ import { Card, CardContent } from './ui/card';
 interface TaskFormProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Omit<Task, 'id' | 'completed' | 'userId'> | Omit<Task, 'userId'>) => void;
   task: Task | null;
 }
 
@@ -66,7 +66,7 @@ export function TaskForm({ isOpen, setIsOpen, onSubmit, task }: TaskFormProps) {
     if (task) {
       form.reset({
         title: task.title,
-        description: task.description,
+        description: task.description ?? '',
       });
       if (task.suggestedTime && task.reasoning) {
         setSuggestion({
@@ -84,7 +84,9 @@ export function TaskForm({ isOpen, setIsOpen, onSubmit, task }: TaskFormProps) {
 
   const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    const dataToSubmit = task ? { ...task, ...values, ...suggestion } : { ...values, ...suggestion };
+    const dataToSubmit = task
+      ? { ...task, ...values, suggestedTime: suggestion?.suggestedCompletionTime, reasoning: suggestion?.reasoning }
+      : { ...values, suggestedTime: suggestion?.suggestedCompletionTime, reasoning: suggestion?.reasoning };
     onSubmit(dataToSubmit);
     setIsSubmitting(false);
     setIsOpen(false);

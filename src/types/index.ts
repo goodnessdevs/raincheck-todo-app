@@ -6,4 +6,6 @@ export type Task = {
   suggestedTime: string | null;
   reasoning: string | null;
   userId: string;
+  createdAt: Date;
+  updatedAt: Date;
 };

@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Github, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -123,7 +123,7 @@ export default function LoginPage() {
         </div>
         <Card>
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle>Welcome back</CardTitle>
             <CardDescription>
               Enter your email below to log in to your account
             </CardDescription>

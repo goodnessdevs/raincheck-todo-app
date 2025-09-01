@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const data: Omit<Task, 'id' | 'completed' | 'userId'> = await request.json();
+  const data: Omit<Task, 'id' | 'completed' | 'userId' | 'createdAt' | 'updatedAt'> = await request.json();
 
   const newTask = await prisma.task.create({
     data: {

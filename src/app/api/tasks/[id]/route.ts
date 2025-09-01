@@ -32,7 +32,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     return NextResponse.json({ message: 'Task not found' }, { status: 404 });
   }
 
-  const data: Partial<Task> = await request.json();
+  const data: Partial<Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>> = await request.json();
 
   const updatedTask = await prisma.task.update({
     where: {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, LogIn, LogOut } from 'lucide-react';
-import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 import type { Task } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ export default function Home() {
     }
   }, [status]);
 
-  const handleAddTask = async (taskData: Omit<Task, 'id' | 'completed'>) => {
+  const handleAddTask = async (taskData: Omit<Task, 'id' | 'completed' | 'userId'>) => {
     const response = await fetch('/api/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,7 +50,7 @@ export default function Home() {
     setTasks(prevTasks => [newTask, ...prevTasks]);
   };
 
-  const handleUpdateTask = async (updatedTask: Task) => {
+  const handleUpdateTask = async (updatedTask: Omit<Task, 'userId'>) => {
     const response = await fetch(`/api/tasks/${updatedTask.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
