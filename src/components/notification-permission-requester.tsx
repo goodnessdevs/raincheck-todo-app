@@ -66,7 +66,7 @@ export function NotificationPermissionRequester() {
     try {
       const messaging = getMessaging(firebaseApp);
       const fcmToken = await getToken(messaging, {
-        vapidKey: 'YOUR_VAPID_PUBLIC_KEY', // Replace with your VAPID public key
+        vapidKey: process.env.VAPID_PUBLIC_KEY, // Replace with your VAPID public key
       });
 
       if (fcmToken) {
