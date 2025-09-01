@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
+import { BackgroundCanvas } from '@/components/background-canvas';
 
 export const metadata: Metadata = {
   title: 'RainCheck',
@@ -29,7 +30,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <BackgroundCanvas />
+            <div className="relative z-10">
+              {children}
+            </div>
             <Toaster />
           </ThemeProvider>
         </AuthProvider>
