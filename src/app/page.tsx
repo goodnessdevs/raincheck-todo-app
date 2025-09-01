@@ -23,6 +23,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { NotificationPermissionRequester } from '@/components/notification-permission-requester';
+
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -127,6 +129,7 @@ export default function Home() {
                 <ThemeToggle />
                 {status === 'authenticated' ? (
                   <>
+                    <NotificationPermissionRequester />
                     <Button onClick={openNewTaskForm}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Task
