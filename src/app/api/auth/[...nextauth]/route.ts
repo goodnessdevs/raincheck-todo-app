@@ -19,10 +19,6 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        // Here you should add your own logic to find the user from your database.
-        // For demonstration purposes, we'll check against a user in the database.
-        // In a real application, you would also want to hash and compare the password.
-        
         if (!credentials?.email || !credentials.password) {
           return null;
         }
@@ -32,14 +28,16 @@ export const authOptions: NextAuthOptions = {
             email: credentials.email,
           },
         });
-
+        
         // This is a placeholder for password validation.
-        // In a real app, you should hash passwords and compare the hash.
-        // For this example, we'll just check if a user exists with that email.
-        // IMPORTANT: Do NOT use this in production without password hashing.
+        // You should replace this with a password hashing and comparison logic.
         if (user) {
-          // This is where you would compare `credentials.password` with a hashed password from the user object.
-          // For now, we return the user if they exist.
+          // IMPORTANT: Do NOT use this in production without password hashing.
+          // Example with bcrypt:
+          // const isValid = await bcrypt.compare(credentials.password, user.password);
+          // if (isValid) {
+          //   return { id: user.id, name: user.name, email: user.email, image: user.image };
+          // }
           return { id: user.id, name: user.name, email: user.email, image: user.image };
         }
         
@@ -51,7 +49,21 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   session: {
-    strategy: "database",
+    strategy: "jwt",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

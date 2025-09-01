@@ -24,27 +24,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 
-const initialTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Design landing page mockup',
-    description: 'Create a high-fidelity mockup in Figma for the new landing page, focusing on a clean and modern aesthetic.',
-    completed: false,
-  },
-  {
-    id: '2',
-    title: 'Develop user authentication',
-    description: 'Implement email/password and social login using NextAuth.js.',
-    completed: false,
-  },
-  {
-    id: '3',
-    title: 'Weekly team sync',
-    description: 'Discuss project progress and plan for the next sprint.',
-    completed: true,
-  },
-];
-
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -53,33 +32,57 @@ export default function Home() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    setTasks(initialTasks);
     setMounted(true);
-  }, []);
+    if (status === 'authenticated') {
+      fetch('/api/tasks')
+        .then(res => res.json())
+        .then(data => setTasks(data));
+    }
+  }, [status]);
 
-  const handleAddTask = (taskData: Omit<Task, 'id' | 'completed'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: crypto.randomUUID(),
-      completed: false,
-    };
+  const handleAddTask = async (taskData: Omit<Task, 'id' | 'completed'>) => {
+    const response = await fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(taskData),
+    });
+    const newTask = await response.json();
     setTasks(prevTasks => [newTask, ...prevTasks]);
   };
 
-  const handleUpdateTask = (updatedTask: Task) => {
+  const handleUpdateTask = async (updatedTask: Task) => {
+    const response = await fetch(`/api/tasks/${updatedTask.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask),
+    });
+    const result = await response.json();
     setTasks(prevTasks =>
-      prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
+      prevTasks.map(task => (task.id === result.id ? result : task))
     );
   };
 
-  const handleDeleteTask = (taskId: string) => {
+  const handleDeleteTask = async (taskId: string) => {
+    await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
     setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
   };
 
-  const handleToggleComplete = (taskId: string) => {
+  const handleToggleComplete = async (taskId: string) => {
+    const taskToToggle = tasks.find(task => task.id === taskId);
+    if (!taskToToggle) return;
+
+    const updatedTask = { ...taskToToggle, completed: !taskToToggle.completed };
+
+    const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTask),
+    });
+    const result = await response.json();
+
     setTasks(prevTasks =>
       prevTasks.map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
+        task.id === taskId ? result : task
       )
     );
   };

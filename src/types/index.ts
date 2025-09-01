@@ -1,8 +1,9 @@
 export type Task = {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   completed: boolean;
-  suggestedTime?: string;
-  reasoning?: string;
+  suggestedTime: string | null;
+  reasoning: string | null;
+  userId: string;
 };
