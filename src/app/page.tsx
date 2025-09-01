@@ -11,6 +11,7 @@ import { TaskItem } from '@/components/task-item';
 import { TaskForm } from '@/components/task-form';
 import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Footer } from '@/components/footer';
 
 const initialTasks: Task[] = [
   {
@@ -175,6 +176,7 @@ export default function Home() {
             </motion.div>
           </div>
         </main>
+        <Footer />
       </div>
 
       <TaskForm
