@@ -34,7 +34,8 @@ import { Card, CardContent } from './ui/card';
 interface TaskFormProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onSubmit: (data: Omit<Task, 'id' | 'completed' | 'userId'> | Omit<Task, 'userId'>) => void;
+  onAddTask: (data: Omit<Task, 'id' | 'completed' | 'userId' | 'createdAt' | 'updatedAt'>) => void;
+  onUpdateTask: (data: Omit<Task, 'userId' | 'createdAt' | 'updatedAt'>) => void;
   task: Task | null;
 }
 
@@ -48,7 +49,7 @@ type Suggestion = {
   reasoning: string;
 };
 
-export function TaskForm({ isOpen, setIsOpen, onSubmit, task }: TaskFormProps) {
+export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: TaskFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -73,23 +74,48 @@ export function TaskForm({ isOpen, setIsOpen, onSubmit, task }: TaskFormProps) {
           suggestedCompletionTime: task.suggestedTime,
           reasoning: task.reasoning,
         });
+      } else {
+        setSuggestion(null);
       }
     } else {
       form.reset({ title: '', description: '' });
+      setSuggestion(null);
     }
      if (!isOpen) {
       setSuggestion(null);
     }
   }, [task, isOpen, form]);
 
-  const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    const dataToSubmit = task
-      ? { ...task, ...values, suggestedTime: suggestion?.suggestedCompletionTime, reasoning: suggestion?.reasoning }
-      : { ...values, suggestedTime: suggestion?.suggestedCompletionTime, reasoning: suggestion?.reasoning };
-    onSubmit(dataToSubmit);
-    setIsSubmitting(false);
-    setIsOpen(false);
+    try {
+        if (task) {
+            onUpdateTask({
+                id: task.id,
+                completed: task.completed,
+                ...values,
+                description: values.description || null,
+                suggestedTime: suggestion?.suggestedCompletionTime || null,
+                reasoning: suggestion?.reasoning || null,
+            });
+        } else {
+            onAddTask({
+                ...values,
+                description: values.description || null,
+                suggestedTime: suggestion?.suggestedCompletionTime || null,
+                reasoning: suggestion?.reasoning || null,
+            });
+        }
+    } catch (error) {
+        console.error("Failed to submit form", error);
+        toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: "There was an error submitting your task.",
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
   
   const handleGetSuggestion = async () => {

@@ -40,7 +40,7 @@ export default function Home() {
     }
   }, [status]);
 
-  const handleAddTask = async (taskData: Omit<Task, 'id' | 'completed' | 'userId'>) => {
+  const handleAddTask = async (taskData: Omit<Task, 'id' | 'completed' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     const response = await fetch('/api/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,18 +48,20 @@ export default function Home() {
     });
     const newTask = await response.json();
     setTasks(prevTasks => [newTask, ...prevTasks]);
+    setIsFormOpen(false);
   };
 
-  const handleUpdateTask = async (updatedTask: Omit<Task, 'userId'>) => {
-    const response = await fetch(`/api/tasks/${updatedTask.id}`, {
+  const handleUpdateTask = async (taskData: Omit<Task, 'userId' | 'createdAt' | 'updatedAt'>) => {
+    const response = await fetch(`/api/tasks/${taskData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedTask),
+        body: JSON.stringify(taskData),
     });
     const result = await response.json();
     setTasks(prevTasks =>
       prevTasks.map(task => (task.id === result.id ? result : task))
     );
+    setIsFormOpen(false);
   };
 
   const handleDeleteTask = async (taskId: string) => {
@@ -240,7 +242,8 @@ export default function Home() {
       <TaskForm
         isOpen={isFormOpen}
         setIsOpen={setIsFormOpen}
-        onSubmit={editingTask ? handleUpdateTask : handleAddTask}
+        onAddTask={handleAddTask}
+        onUpdateTask={handleUpdateTask}
         task={editingTask}
       />
     </>
