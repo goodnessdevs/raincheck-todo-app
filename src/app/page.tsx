@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskItem } from '@/components/task-item';
 import { TaskForm } from '@/components/task-form';
 import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const initialTasks: Task[] = [
   {
@@ -104,10 +105,13 @@ export default function Home() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <Logo />
-              <Button onClick={openNewTaskForm}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Task
-              </Button>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Button onClick={openNewTaskForm}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Task
+                </Button>
+              </div>
             </div>
           </div>
         </header>
