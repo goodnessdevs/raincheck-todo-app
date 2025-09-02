@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 import { Loader2 } from 'lucide-react';
+import { Suspense } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -16,23 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
 import Link from 'next/link';
-
-const formSchema = z.object({
-  email: z.string().email('Please enter a valid email address.'),
-  password: z.string().min(1, 'Password is required.'),
-});
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -61,45 +45,10 @@ function LoginForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
-  const [isLoading, setIsLoading] = useState<string | null>(null);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { email: '', password: '' },
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading('credentials');
-    try {
-      const res = await signIn('credentials', {
-        redirect: false,
-        email: values.email,
-        password: values.password,
-        callbackUrl,
-      });
-
-      if (res?.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: 'Invalid email or password. Please try again.',
-        });
-      } else if (res?.url) {
-        window.location.href = res.url;
-      }
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Something went wrong',
-        description: 'An unexpected error occurred. Please try again later.',
-      });
-    } finally {
-      setIsLoading(null);
-    }
-  }
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleGoogleSignIn() {
-    setIsLoading('google');
+    setIsLoading(true);
     try {
       await signIn('google', { callbackUrl });
     } catch (error) {
@@ -109,108 +58,57 @@ function LoginForm() {
         description: 'Could not sign in with Google. Please try again later.',
       });
     } finally {
-      setIsLoading(null);
+      setIsLoading(false);
     }
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 gap-4">
-        <Button
-          variant="outline"
-          onClick={handleGoogleSignIn}
-          disabled={!!isLoading}
-        >
-          {isLoading === 'google' ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <GoogleIcon className="mr-2 h-4 w-4" />
-          )}
-          Google
-        </Button>
-      </div>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="m@example.com"
-                    autoComplete="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    autoComplete="current-password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="w-full" disabled={!!isLoading}>
-            {isLoading === 'credentials' && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Login
-          </Button>
-        </form>
-      </Form>
-    </>
+    <div className="grid grid-cols-1 gap-6">
+      <Button
+        variant="outline"
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+        className="py-6 text-lg"
+      >
+        {isLoading ? (
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        ) : (
+          <GoogleIcon className="mr-3 h-5 w-5" />
+        )}
+        Sign in with Google
+      </Button>
+    </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
+       <div className="absolute top-8">
           <Link href="/">
              <Logo />
           </Link>
         </div>
-        <Card>
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle>Welcome back</CardTitle>
-            <CardDescription>
-              Enter your email below to log in to your account
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card className="shadow-2xl">
+          <CardHeader className="space-y-2 text-center">
+            <CardTitle className="text-3xl">Welcome to RainCheck</CardTitle>
+            <CardDescription className="text-base">
+              Sign in to continue to your dashboard
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-6">
-            <Suspense fallback={<div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+          <CardContent className="grid gap-6 p-8">
+             <Suspense fallback={<div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <LoginForm />
             </Suspense>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 }

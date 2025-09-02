@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { BrainCircuit, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { CalendarIcon, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -27,9 +27,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { Task } from '@/types';
-import { getSuggestion } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from './ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Calendar } from '@/components/ui/calendar';
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -42,12 +43,8 @@ interface TaskFormProps {
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title is too long'),
   description: z.string().max(500, 'Description is too long').optional(),
+  reminderDateTime: z.date().optional().nullable(),
 });
-
-type Suggestion = {
-  suggestedCompletionTime: string;
-  reasoning: string;
-};
 
 export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: TaskFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -55,56 +52,43 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
     defaultValues: {
       title: '',
       description: '',
+      reminderDateTime: null,
     },
   });
   
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAISuggesting, setIsAISuggesting] = useState(false);
-  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
 
   useEffect(() => {
     if (task) {
       form.reset({
         title: task.title,
         description: task.description ?? '',
+        reminderDateTime: task.suggestedTime ? new Date(task.suggestedTime) : null
       });
-      if (task.suggestedTime && task.reasoning) {
-        setSuggestion({
-          suggestedCompletionTime: task.suggestedTime,
-          reasoning: task.reasoning,
-        });
-      } else {
-        setSuggestion(null);
-      }
     } else {
-      form.reset({ title: '', description: '' });
-      setSuggestion(null);
-    }
-     if (!isOpen) {
-      setSuggestion(null);
+      form.reset({ title: '', description: '', reminderDateTime: null });
     }
   }, [task, isOpen, form]);
 
   const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
+    const submissionData = {
+        ...values,
+        description: values.description || null,
+        suggestedTime: values.reminderDateTime ? values.reminderDateTime.toISOString() : null,
+        reasoning: values.reminderDateTime ? `Manual reminder set for ${format(values.reminderDateTime, 'PPP p')}` : null
+    };
+
     try {
         if (task) {
             onUpdateTask({
                 id: task.id,
                 completed: task.completed,
-                ...values,
-                description: values.description || null,
-                suggestedTime: suggestion?.suggestedCompletionTime || null,
-                reasoning: suggestion?.reasoning || null,
+                ...submissionData,
             });
         } else {
-            onAddTask({
-                ...values,
-                description: values.description || null,
-                suggestedTime: suggestion?.suggestedCompletionTime || null,
-                reasoning: suggestion?.reasoning || null,
-            });
+            onAddTask(submissionData);
         }
     } catch (error) {
         console.error("Failed to submit form", error);
@@ -115,29 +99,6 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
         });
     } finally {
         setIsSubmitting(false);
-    }
-  };
-  
-  const handleGetSuggestion = async () => {
-    const { title, description } = form.getValues();
-    if (!title) {
-      form.setError("title", { type: "manual", message: "Please enter a title to get a suggestion." });
-      return;
-    }
-    
-    setIsAISuggesting(true);
-    setSuggestion(null);
-    try {
-      const result = await getSuggestion(title, description || '');
-      setSuggestion(result);
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'AI Suggestion Failed',
-        description: error.message || 'Could not retrieve a suggestion.',
-      });
-    } finally {
-      setIsAISuggesting(false);
     }
   };
 
@@ -174,7 +135,7 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g. Call Dr. Smith's office for a check-up, preferably on a weekday morning."
+                        placeholder="e.g. Call Dr. Smith's office for a check-up."
                         className="resize-none"
                         {...field}
                       />
@@ -183,40 +144,60 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="reminderDateTime"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Reminder (Optional)</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP p")
+                            ) : (
+                              <span>Pick a date and time</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ?? undefined}
+                          onSelect={field.onChange}
+                          disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                          initialFocus
+                        />
+                         <div className="p-3 border-t border-border">
+                            <Input
+                                type="time"
+                                value={field.value ? format(field.value, 'HH:mm') : ''}
+                                onChange={(e) => {
+                                    const time = e.target.value;
+                                    const [hours, minutes] = time.split(':').map(Number);
+                                    const newDate = field.value ? new Date(field.value) : new Date();
+                                    newDate.setHours(hours, minutes);
+                                    field.onChange(newDate);
+                                }}
+                            />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+                />
             </div>
             
-            <div className="space-y-4">
-              <Button type="button" variant="outline" className="w-full" onClick={handleGetSuggestion} disabled={isAISuggesting}>
-                {isAISuggesting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <BrainCircuit className="mr-2 h-4 w-4" />
-                )}
-                Suggest Optimal Time
-              </Button>
-              <AnimatePresence>
-                {suggestion && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Card className="bg-secondary/50">
-                      <CardContent className="p-4 text-sm">
-                        <p className="font-semibold text-primary-foreground">
-                          Suggested Time: <span className="font-normal text-foreground">{suggestion.suggestedCompletionTime}</span>
-                        </p>
-                        <p className="font-semibold text-primary-foreground mt-2">
-                          Reasoning: <span className="font-normal text-foreground">{suggestion.reasoning}</span>
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>

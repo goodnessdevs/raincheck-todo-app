@@ -4,7 +4,6 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
-import { BackgroundCanvas } from '@/components/background-canvas';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -20,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-body antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
           <ThemeProvider
             attribute="class"
@@ -28,7 +27,6 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <BackgroundCanvas />
             <div className="relative z-10">
               {children}
             </div>

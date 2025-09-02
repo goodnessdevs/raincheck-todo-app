@@ -1,4 +1,4 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/suggest-optimal-task-completion-times.ts';
+import '@/ai/flows/ai-assistant-flow.ts';

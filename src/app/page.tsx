@@ -1,30 +1,19 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus, LogIn, LogOut } from 'lucide-react';
-import { useSession, signOut } from 'next-auth/react';
+import { Plus, LogIn, MessageSquare, ListTodo } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 import type { Task } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TaskItem } from '@/components/task-item';
 import { TaskForm } from '@/components/task-form';
-import { Logo } from '@/components/logo';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Footer } from '@/components/footer';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import Link from 'next/link';
-import { NotificationPermissionRequester } from '@/components/notification-permission-requester';
-
+import { useToast } from '@/hooks/use-toast';
+import { AppHeader } from '@/components/app-header';
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -32,6 +21,8 @@ export default function Home() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [mounted, setMounted] = useState(false);
   const { data: session, status } = useSession();
+  const { toast } = useToast();
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -42,6 +33,13 @@ export default function Home() {
     }
   }, [status]);
 
+  const playSound = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(e => console.error("Error playing sound:", e));
+    }
+  };
+
   const handleAddTask = async (taskData: Omit<Task, 'id' | 'completed' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     const response = await fetch('/api/tasks', {
       method: 'POST',
@@ -51,6 +49,10 @@ export default function Home() {
     const newTask = await response.json();
     setTasks(prevTasks => [newTask, ...prevTasks]);
     setIsFormOpen(false);
+    toast({
+      title: 'Task Added!',
+      description: `"${newTask.title}" has been added to your list.`,
+    });
   };
 
   const handleUpdateTask = async (taskData: Omit<Task, 'userId' | 'createdAt' | 'updatedAt'>) => {
@@ -64,11 +66,21 @@ export default function Home() {
       prevTasks.map(task => (task.id === result.id ? result : task))
     );
     setIsFormOpen(false);
+     toast({
+      title: 'Task Updated!',
+      description: `"${result.title}" has been successfully updated.`,
+    });
   };
 
   const handleDeleteTask = async (taskId: string) => {
     await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+    const deletedTask = tasks.find(t => t.id === taskId);
     setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    toast({
+      variant: 'destructive',
+      title: 'Task Deleted',
+      description: `"${deletedTask?.title}" has been removed.`,
+    });
   };
 
   const handleToggleComplete = async (taskId: string) => {
@@ -89,6 +101,14 @@ export default function Home() {
         task.id === taskId ? result : task
       )
     );
+
+    if (result.completed) {
+      playSound();
+      toast({
+        title: 'Task Completed!',
+        description: `Great job on finishing "${result.title}"!`,
+      });
+    }
   };
 
   const openNewTaskForm = () => {
@@ -115,108 +135,40 @@ export default function Home() {
   }, [tasks]);
 
   if (!mounted) {
-    return null;
+    return <div className="flex items-center justify-center min-h-screen"></div>;
   }
   
   return (
     <>
-      <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <Logo />
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                {status === 'authenticated' ? (
-                  <>
-                    <NotificationPermissionRequester />
-                    <Button onClick={openNewTaskForm}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Task
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={session.user?.image ?? undefined} alt={session.user?.name ?? ''} />
-                            <AvatarFallback>{session.user?.name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56" align="end" forceMount>
-                        <DropdownMenuLabel className="font-normal">
-                          <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{session.user?.name}</p>
-                            <p className="text-xs leading-none text-muted-foreground">
-                              {session.user?.email}
-                            </p>
-                          </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => signOut()}>
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Log out</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                ) : (
-                  <Link href="/login">
-                    <Button>
-                      <LogIn className="mr-2 h-4 w-4" />
-                      Sign In
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
+      <audio ref={audioRef} src="/sounds/complete.mp3" preload="auto"></audio>
+      <div className="flex flex-col min-h-screen bg-background font-sans">
+        <AppHeader page="tasks" />
 
-        <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="max-w-3xl mx-auto">
+        <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
              {status === 'authenticated' ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
+                className="space-y-8"
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Your Tasks</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <section>
-                      <h3 className="text-lg font-medium mb-4 text-foreground/80">Pending</h3>
-                      <div className="space-y-3">
-                        <AnimatePresence>
-                          {pendingTasks.length > 0 ? (
-                            pendingTasks.map(task => (
-                              <TaskItem
-                                key={task.id}
-                                task={task}
-                                onEdit={openEditTaskForm}
-                                onDelete={handleDeleteTask}
-                                onToggleComplete={handleToggleComplete}
-                              />
-                            ))
-                          ) : (
-                            <motion.p 
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="text-muted-foreground text-center py-4"
-                            >
-                              No pending tasks. Add one to get started!
-                            </motion.p>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </section>
-                    <section>
-                      <h3 className="text-lg font-medium mb-4 text-foreground/80">Completed</h3>
-                      <div className="space-y-3">
-                        <AnimatePresence>
-                          {completedTasks.map(task => (
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <h1 className="text-3xl font-bold tracking-tight">Your Tasks</h1>
+                   <Button onClick={openNewTaskForm} size="lg" className="w-full sm:w-auto">
+                      <Plus className="mr-2 h-5 w-5" />
+                      Add New Task
+                    </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <Card className="border-primary/20 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-2xl">Pending</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <AnimatePresence>
+                        {pendingTasks.length > 0 ? (
+                          pendingTasks.map(task => (
                             <TaskItem
                               key={task.id}
                               task={task}
@@ -224,20 +176,66 @@ export default function Home() {
                               onDelete={handleDeleteTask}
                               onToggleComplete={handleToggleComplete}
                             />
-                          ))}
-                        </AnimatePresence>
-                      </div>
-                    </section>
-                  </CardContent>
-                </Card>
+                          ))
+                        ) : (
+                          <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-muted-foreground text-center py-10"
+                          >
+                            No pending tasks. Add one to get started!
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-primary/20 shadow-sm">
+                     <CardHeader>
+                      <CardTitle className="text-2xl">Completed</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <AnimatePresence>
+                        {completedTasks.map(task => (
+                          <TaskItem
+                            key={task.id}
+                            task={task}
+                            onEdit={openEditTaskForm}
+                            onDelete={handleDeleteTask}
+                            onToggleComplete={handleToggleComplete}
+                          />
+                        ))}
+                      </AnimatePresence>
+                      {completedTasks.length === 0 && (
+                         <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-muted-foreground text-center py-10"
+                          >
+                            No completed tasks yet.
+                          </motion.p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </motion.div>
              ) : (
               <div className="text-center py-20">
-                <h1 className="text-4xl font-bold tracking-tight">Welcome to RainCheck</h1>
-                <p className="mt-4 text-lg text-muted-foreground">Please sign in to manage your tasks.</p>
+                 <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, type: 'spring' }}
+                  >
+                  <h1 className="text-5xl font-extrabold tracking-tight">Welcome to <span className="text-primary">RainCheck</span></h1>
+                  <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto">Your smart to-do list for staying organized and productive. Please sign in to manage your tasks.</p>
+                  <Link href="/login" className="mt-10 inline-block">
+                    <Button size="lg" className="text-lg py-7 px-10">
+                      <LogIn className="mr-2 h-5 w-5" />
+                      Sign In with Google
+                    </Button>
+                  </Link>
+                </motion.div>
               </div>
              )}
-          </div>
         </main>
         <Footer />
       </div>
