@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus, LogIn, MessageSquare, ListTodo } from 'lucide-react';
+import { Plus, LogIn } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
