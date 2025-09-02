@@ -1,13 +1,13 @@
 import { initializeApp, getApps } from 'firebase/app';
 
 const firebaseConfig = {
-  "projectId": "raincheck-k6xpe",
-  "appId": "1:172960932877:web:85632877066fdb81006144",
-  "storageBucket": "raincheck-k6xpe.firebasestorage.app",
-  "apiKey": "AIzaSyDKxg-QBiI9C5-kwoPyRkCCVaZNRe0ICdM",
-  "authDomain": "raincheck-k6xpe.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "172960932877"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
