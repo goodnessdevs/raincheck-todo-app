@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -18,9 +19,12 @@ import {
 export function NotificationPermissionRequester() {
   const { data: session } = useSession();
   const { toast } = useToast();
-  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
+  const [notificationPermission, setNotificationPermission] = useState('default');
 
   useEffect(() => {
+    // Set the permission state only on the client
+    setNotificationPermission(Notification.permission);
+    
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       const messaging = getMessaging(firebaseApp);
 
