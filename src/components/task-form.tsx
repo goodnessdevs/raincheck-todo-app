@@ -60,14 +60,16 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (task) {
-      form.reset({
-        title: task.title,
-        description: task.description ?? '',
-        reminderDateTime: task.suggestedTime ? new Date(task.suggestedTime) : null
-      });
-    } else {
-      form.reset({ title: '', description: '', reminderDateTime: null });
+    if (isOpen) {
+        if (task) {
+        form.reset({
+            title: task.title,
+            description: task.description ?? '',
+            reminderDateTime: task.suggestedTime ? new Date(task.suggestedTime) : null
+        });
+        } else {
+        form.reset({ title: '', description: '', reminderDateTime: null });
+        }
     }
   }, [task, isOpen, form]);
 
@@ -90,7 +92,6 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
         } else {
             await onAddTask(submissionData);
         }
-        setIsOpen(false);
     } catch (error) {
         console.error("Failed to submit form", error);
         toast({
@@ -184,6 +185,7 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
                                 value={field.value ? format(field.value, 'HH:mm') : ''}
                                 onChange={(e) => {
                                     const time = e.target.value;
+                                    if (!time) return;
                                     const [hours, minutes] = time.split(':').map(Number);
                                     const newDate = field.value ? new Date(field.value) : new Date();
                                     newDate.setHours(hours, minutes);
