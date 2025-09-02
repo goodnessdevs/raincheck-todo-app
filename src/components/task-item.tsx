@@ -1,8 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Edit, Trash2, Clock, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
+import { Edit, Trash2, Calendar } from 'lucide-react';
+import { format, isValid } from 'date-fns';
 
 import type { Task } from '@/types';
 import { cn } from '@/lib/utils';
@@ -38,6 +38,10 @@ export function TaskItem({
     visible: { opacity: 1, y: 0 },
     exit: { opacity: 0, x: -50, transition: { duration: 0.2 } },
   };
+
+  const reminderDate = task.suggestedTime ? new Date(task.suggestedTime) : null;
+  const isDateValid = reminderDate && isValid(reminderDate);
+
 
   return (
     <motion.div
@@ -80,10 +84,10 @@ export function TaskItem({
                 {task.description}
               </p>
             )}
-            {task.suggestedTime && (
+             {isDateValid && reminderDate && (
               <div className="flex items-center text-xs text-primary pt-1 cursor-default font-semibold">
                   <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                  <span>{format(new Date(task.suggestedTime), "EEE, MMM d 'at' p")}</span>
+                  <span>{format(reminderDate, "EEE, MMM d 'at' p")}</span>
               </div>
             )}
           </div>
