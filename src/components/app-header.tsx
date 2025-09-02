@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, User, MessageSquare, ListTodo } from 'lucide-react';
+import { LogOut, MessageSquare, ListTodo } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 
@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { NotificationPermissionRequester } from '@/components/notification-permission-requester';
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
 interface AppHeaderProps {
@@ -28,7 +27,7 @@ export function AppHeader({ page }: AppHeaderProps) {
     const { data: session } = useSession();
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-16 items-center max-w-7xl mx-auto">
+            <div className="container flex h-16 items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <Logo />
                 <div className="flex flex-1 items-center justify-end space-x-2">
                      <nav className="hidden md:flex items-center space-x-2 mr-4">

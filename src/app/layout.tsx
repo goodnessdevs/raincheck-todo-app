@@ -10,6 +10,10 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'RainCheck',
   description: 'A smart todo app to help you organize your tasks.',
+  metadataBase: new URL('https://raincheck.app'), // Replace with your actual domain
+  applicationName: 'RainCheck',
+  authors: [{ name: 'RainCheck Team' }],
+  keywords: ['todo', 'task manager', 'productivity', 'AI assistant'],
 };
 
 export default function RootLayout({
@@ -19,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased bg-background`}>
         <AuthProvider>
           <ThemeProvider
             attribute="class"
