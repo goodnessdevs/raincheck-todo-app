@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {Message} from 'genkit/experimental/ai';
 
 const AiAssistantInputSchema = z.object({
   history: z.array(z.object({
@@ -37,9 +38,14 @@ const aiAssistantFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (input) => {
+    const history = input.history.map(
+      (msg) => new Message(msg.role, msg.content)
+    );
+
     const { output } = await ai.generate({
+      model: 'googleai/gemini-2.5-flash',
       prompt,
-      history: input.history,
+      history,
       input: input.message,
     });
     return output.text!;

@@ -35,8 +35,8 @@ import { Calendar } from '@/components/ui/calendar';
 interface TaskFormProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onAddTask: (data: Omit<Task, 'id' | 'completed' | 'userId' | 'createdAt' | 'updatedAt'>) => void;
-  onUpdateTask: (data: Omit<Task, 'userId' | 'createdAt' | 'updatedAt'>) => void;
+  onAddTask: (data: Omit<Task, 'id' | 'completed' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  onUpdateTask: (data: Omit<Task, 'userId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   task: Task | null;
 }
 
@@ -82,14 +82,15 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
 
     try {
         if (task) {
-            onUpdateTask({
+            await onUpdateTask({
                 id: task.id,
                 completed: task.completed,
                 ...submissionData,
             });
         } else {
-            onAddTask(submissionData);
+            await onAddTask(submissionData);
         }
+        setIsOpen(false);
     } catch (error) {
         console.error("Failed to submit form", error);
         toast({

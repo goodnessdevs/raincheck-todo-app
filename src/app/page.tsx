@@ -48,7 +48,6 @@ export default function Home() {
     });
     const newTask = await response.json();
     setTasks(prevTasks => [newTask, ...prevTasks]);
-    setIsFormOpen(false);
     toast({
       title: 'Task Added!',
       description: `"${newTask.title}" has been added to your list.`,
@@ -65,7 +64,6 @@ export default function Home() {
     setTasks(prevTasks =>
       prevTasks.map(task => (task.id === result.id ? result : task))
     );
-    setIsFormOpen(false);
      toast({
       title: 'Task Updated!',
       description: `"${result.title}" has been successfully updated.`,
