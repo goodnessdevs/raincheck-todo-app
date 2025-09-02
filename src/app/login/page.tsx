@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { Suspense } from 'react';
+import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -52,13 +52,12 @@ function LoginForm() {
     try {
       await signIn('google', { callbackUrl });
     } catch (error) {
+      setIsLoading(false);
       toast({
         variant: 'destructive',
         title: 'Something went wrong',
         description: 'Could not sign in with Google. Please try again later.',
       });
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -80,6 +79,7 @@ function LoginForm() {
     </div>
   );
 }
+
 
 export default function LoginPage() {
   return (
@@ -103,7 +103,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 p-8">
-             <Suspense fallback={<div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <Suspense fallback={<div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
               <LoginForm />
             </Suspense>
           </CardContent>
