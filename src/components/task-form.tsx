@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -61,15 +62,15 @@ export function TaskForm({ isOpen, setIsOpen, onAddTask, onUpdateTask, task }: T
 
   useEffect(() => {
     if (isOpen) {
-        if (task) {
+      if (task) {
         form.reset({
-            title: task.title,
-            description: task.description ?? '',
-            reminderDateTime: task.suggestedTime ? new Date(task.suggestedTime) : null
+          title: task.title,
+          description: task.description ?? '',
+          reminderDateTime: task.suggestedTime ? new Date(task.suggestedTime) : null,
         });
-        } else {
+      } else {
         form.reset({ title: '', description: '', reminderDateTime: null });
-        }
+      }
     }
   }, [task, isOpen, form]);
 
