@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 
 import type { Task } from '@/types';
@@ -148,7 +148,6 @@ export function TasksDashboard() {
               <CardTitle className="text-2xl">Pending</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <AnimatePresence>
                 {pendingTasks.length > 0 ? (
                   pendingTasks.map(task => (
                     <TaskItem
@@ -168,7 +167,6 @@ export function TasksDashboard() {
                     No pending tasks. Add one to get started!
                   </motion.p>
                 )}
-              </AnimatePresence>
             </CardContent>
           </Card>
           <Card className="border-primary/20 shadow-sm">
@@ -176,7 +174,6 @@ export function TasksDashboard() {
               <CardTitle className="text-2xl">Completed</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <AnimatePresence>
                 {completedTasks.map(task => (
                   <TaskItem
                     key={task.id}
@@ -186,7 +183,6 @@ export function TasksDashboard() {
                     onToggleComplete={handleToggleComplete}
                   />
                 ))}
-              </AnimatePresence>
               {completedTasks.length === 0 && (
                 <motion.p
                   initial={{ opacity: 0 }}
